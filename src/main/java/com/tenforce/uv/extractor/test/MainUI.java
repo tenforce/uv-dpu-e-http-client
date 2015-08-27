@@ -1,50 +1,26 @@
-package com.tenforce.uv.extractor.httpClient;
+package com.tenforce.uv.extractor.test;
 
 import com.vaadin.data.validator.StringLengthValidator;
+import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.*;
-import eu.unifiedviews.dpu.config.DPUConfigException;
-import eu.unifiedviews.helpers.dpu.context.ContextUtils;
-import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
+import org.apache.http.client.methods.CloseableHttpResponse;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 
-/**
- * Vaadin configuration dialog for httpClient.
- *
- * @author Tenforce
- */
-public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> {
+public class MainUI extends UI {
 
     private Map<String, String> headers = new HashMap<>();
     private Map<String, String> params = new HashMap<>();
+    private UVHttpClient client = new UVHttpClient();
 
-    public httpClientVaadinDialog() {
-        super(httpClient.class);
-    }
 
     @Override
-    public void setConfiguration(httpClientConfig_V1 c) throws DPUConfigException {
-
-    }
-
-    @Override
-    public httpClientConfig_V1 getConfiguration() throws DPUConfigException {
-        final httpClientConfig_V1 c = new httpClientConfig_V1();
-
-        return c;
-    }
-
-    @Override
-    public void buildDialogLayout() {
-        final VerticalLayout mainLayout = new VerticalLayout();
-        mainLayout.setWidth("100%");
-        mainLayout.setHeight("-1px");
-        mainLayout.setMargin(true);
-
-        mainLayout.addComponent(new Label(ctx.tr("httpClient.dialog.label")));
-
+    protected void init(final VaadinRequest request) {
+        VerticalLayout view = new VerticalLayout();
+        view.setMargin(true);
 
         VerticalLayout upperLayout = new VerticalLayout();
         final TextField uriField = new TextField();
@@ -57,9 +33,9 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         final ComboBox methodMenu = new ComboBox();
         methodMenu.setTextInputAllowed(false);
         methodMenu.setNullSelectionAllowed(false);
-        methodMenu.addItem("GET");
-        methodMenu.addItem("POST");
-        methodMenu.setValue("GET");
+        methodMenu.addItem("get");
+        methodMenu.addItem("post");
+        methodMenu.setValue("get");
         final TextArea bodyTextArea = new TextArea("Body:");
         bodyTextArea.setWidth(350, Unit.PIXELS);
 
@@ -69,24 +45,42 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         upperLayout.addComponent(methodMenu);
         upperLayout.addComponent(bodyTextArea);
 
-        mainLayout.addComponent(upperLayout);
-        mainLayout.addComponent(buildParamsLayout("header", headers));
-        mainLayout.addComponent(buildParamsLayout("param", params));
-        setCompositionRoot(mainLayout);
-        try {
-            getConfiguration().setUri(uriField.getValue());
-            getConfiguration().setBody(bodyTextArea.getValue());
+        final Label result = new Label();
+        result.setWidth(700, Unit.PIXELS);
+        result.setReadOnly(true);
 
-            getConfiguration().setMethod((String) methodMenu.getValue());
-            getConfiguration().setHeaders(headers);
-            getConfiguration().setParams(params);
-        } catch (DPUConfigException e) {
-            ContextUtils.sendError(ctx, e.getMessage(), null);
-        }
+        Button checkButton = new Button("Check");
+        checkButton.addClickListener(new Button.ClickListener() {
 
+            @Override
+            public void buttonClick(Button.ClickEvent clickEvent) {
+                System.out.println("========================URI: " + uriField.getValue() + " Selection: " + methodMenu.getValue() + "Body: " + bodyTextArea + "\n" + headers + "\n" + params);
+                try {
+                    CloseableHttpResponse response = client.sendRequest(uriField.getValue(), (String) methodMenu.getValue(), headers, params, bodyTextArea.getValue());
+                    System.out.println(response.getStatusLine().getStatusCode());
+                    System.out.println(response);
+                    System.out.println();
+                    result.setValue("Response: " + response.getStatusLine().getStatusCode() + "\nResponse entity:\n:" + response.getEntity() + "\nType" + response.getEntity().getContentType());
+                    headers.clear();
+                    params.clear();
+                    response.close();
+
+                } catch (IOException e) {
+                    throw new RuntimeException("IO Error occured: " + e.getMessage());
+                }
+            }
+        });
+
+        view.addComponent(upperLayout);
+        view.addComponent(buildParamsLayout("header", headers));
+        view.addComponent(buildParamsLayout("param", params));
+        view.addComponent(checkButton);
+        view.addComponent(result);
+        setContent(view);
     }
 
     private VerticalLayout buildParamsLayout(final String keyName, final Map<String, String> paramMap) {
+
 
         // Building headers for a table
         final VerticalLayout mainLayout = new VerticalLayout();
