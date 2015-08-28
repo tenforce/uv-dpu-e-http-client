@@ -1,5 +1,7 @@
 package com.tenforce.uv.extractor.httpClient;
 
+import eu.unifiedviews.helpers.dpu.ontology.EntityDescription;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,11 +10,9 @@ import java.util.Map;
  *
  * @author Tenforce
  */
+@EntityDescription.Entity(type = FilesDownloadVocabulary.STR_CONFIG_CLASS)
 public class httpClientConfig_V1 {
 
-    //    public httpClientConfig_V1() {
-//
-//    }
     private Map<String, String> headers = new HashMap<>();
     private Map<String, String> params = new HashMap<>();
     private String uri;
@@ -58,4 +58,5 @@ public class httpClientConfig_V1 {
     public void setBody(String body) {
         this.body = body;
     }
+
 }

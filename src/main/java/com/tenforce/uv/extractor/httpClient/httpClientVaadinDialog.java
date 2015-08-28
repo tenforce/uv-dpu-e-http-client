@@ -3,7 +3,6 @@ package com.tenforce.uv.extractor.httpClient;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.*;
 import eu.unifiedviews.dpu.config.DPUConfigException;
-import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
 
 import java.util.HashMap;
@@ -19,21 +18,25 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
 
     private Map<String, String> headers = new HashMap<>();
     private Map<String, String> params = new HashMap<>();
+    private httpClientConfig_V1 configuration = new httpClientConfig_V1();
 
     public httpClientVaadinDialog() {
         super(httpClient.class);
     }
 
     @Override
-    public void setConfiguration(httpClientConfig_V1 c) throws DPUConfigException {
-
+    public void setConfiguration(httpClientConfig_V1 configuration) throws DPUConfigException {
+        this.configuration = configuration;
     }
 
     @Override
     public httpClientConfig_V1 getConfiguration() throws DPUConfigException {
-        final httpClientConfig_V1 c = new httpClientConfig_V1();
-
-        return c;
+        configuration.setUri("http://google.com");
+        configuration.setBody("body");
+        configuration.setMethod("get");
+        configuration.setHeaders(headers);
+        configuration.setParams(params);
+        return configuration;
     }
 
     @Override
@@ -61,7 +64,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         methodMenu.addItem("POST");
         methodMenu.setValue("GET");
         final TextArea bodyTextArea = new TextArea("Body:");
-        bodyTextArea.setWidth(350, Unit.PIXELS);
+        bodyTextArea.setWidth(300, Unit.PIXELS);
 
         upperLayout.addComponent(uriLabel);
         upperLayout.addComponent(uriField);
@@ -73,17 +76,12 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         mainLayout.addComponent(buildParamsLayout("header", headers));
         mainLayout.addComponent(buildParamsLayout("param", params));
         setCompositionRoot(mainLayout);
-        try {
-            getConfiguration().setUri(uriField.getValue());
-            getConfiguration().setBody(bodyTextArea.getValue());
+        configuration.setUri(uriField.getValue());
+        configuration.setBody(bodyTextArea.getValue());
 
-            getConfiguration().setMethod((String) methodMenu.getValue());
-            getConfiguration().setHeaders(headers);
-            getConfiguration().setParams(params);
-        } catch (DPUConfigException e) {
-            ContextUtils.sendError(ctx, e.getMessage(), null);
-        }
-
+        configuration.setMethod((String) methodMenu.getValue());
+        configuration.setHeaders(headers);
+        configuration.setParams(params);
     }
 
     private VerticalLayout buildParamsLayout(final String keyName, final Map<String, String> paramMap) {
@@ -103,8 +101,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
 
         final TextField keyText = new TextField();
         final TextField valueText = new TextField();
-        keyText.setWidth(350, Unit.PIXELS);
-        valueText.setWidth(350, Unit.PIXELS);
+        keyText.setWidth(300, Unit.PIXELS);
+        valueText.setWidth(300, Unit.PIXELS);
         // Add button setup
         Button addButton = new Button("Add " + keyName);
         addButton.addClickListener(new Button.ClickListener() {
@@ -126,8 +124,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
                         }
                         TextField key = new TextField(keyTextValue);
                         TextField value = new TextField(valueTextValue);
-                        key.setWidth(350, Unit.PIXELS);
-                        value.setWidth(350, Unit.PIXELS);
+                        key.setWidth(300, Unit.PIXELS);
+                        value.setWidth(300, Unit.PIXELS);
                         key.setReadOnly(true);
                         value.setReadOnly(true);
 
@@ -146,7 +144,6 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
                         mainLayout.addComponent(values);
                     }
                 }
-
             }
         });
         HorizontalLayout addLayout = new HorizontalLayout();
