@@ -2,36 +2,45 @@ package com.tenforce.uv.extractor.httpClient;
 
 import eu.unifiedviews.helpers.dpu.ontology.EntityDescription;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Configuration class for httpClient.
  *
  * @author Tenforce
  */
-@EntityDescription.Entity(type = FilesDownloadVocabulary.STR_CONFIG_CLASS)
+@EntityDescription.Entity(type = HttpClientVocabulary.STR_CONFIG_CLASS)
 public class httpClientConfig_V1 {
 
-    private Map<String, String> headers = new HashMap<>();
-    private Map<String, String> params = new HashMap<>();
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_HAS_URI)
     private String uri;
+
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_HAS_PARAM)
+    private List<HttpClientPair_V1> params = new ArrayList<>();
+
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_HAS_HEADER)
+    private List<HttpClientPair_V1> headers = new ArrayList<>();
+
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_HAS_METHOD)
     private String method;
+
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_HAS_BODY)
     private String body;
 
-    public Map<String, String> getHeaders() {
+    public List<HttpClientPair_V1> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(Map<String, String> headers) {
+    public void setHeaders(List<HttpClientPair_V1> headers) {
         this.headers = headers;
     }
 
-    public Map<String, String> getParams() {
+    public List<HttpClientPair_V1> getParams() {
         return params;
     }
 
-    public void setParams(Map<String, String> params) {
+    public void setParams(List<HttpClientPair_V1> params) {
         this.params = params;
     }
 

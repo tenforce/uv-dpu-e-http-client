@@ -5,7 +5,8 @@ import com.vaadin.ui.*;
 import eu.unifiedviews.dpu.config.DPUConfigException;
 import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -16,8 +17,6 @@ import java.util.Map;
  */
 public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> {
 
-    private Map<String, String> headers = new HashMap<>();
-    private Map<String, String> params = new HashMap<>();
     private httpClientConfig_V1 configuration = new httpClientConfig_V1();
 
     public httpClientVaadinDialog() {
@@ -34,8 +33,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         configuration.setUri("http://google.com");
         configuration.setBody("body");
         configuration.setMethod("get");
-        configuration.setHeaders(headers);
-        configuration.setParams(params);
+        configuration.setHeaders(new ArrayList<HttpClientPair_V1>());
+        configuration.setParams(new ArrayList<HttpClientPair_V1>());
         return configuration;
     }
 
@@ -73,18 +72,18 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         upperLayout.addComponent(bodyTextArea);
 
         mainLayout.addComponent(upperLayout);
-        mainLayout.addComponent(buildParamsLayout("header", headers));
-        mainLayout.addComponent(buildParamsLayout("param", params));
+        mainLayout.addComponent(buildParamsLayout("header", new ArrayList<HttpClientPair_V1>()));
+        mainLayout.addComponent(buildParamsLayout("param", new ArrayList<HttpClientPair_V1>()));
         setCompositionRoot(mainLayout);
         configuration.setUri(uriField.getValue());
         configuration.setBody(bodyTextArea.getValue());
 
         configuration.setMethod((String) methodMenu.getValue());
-        configuration.setHeaders(headers);
-        configuration.setParams(params);
+        configuration.setHeaders(new ArrayList<HttpClientPair_V1>());
+        configuration.setParams(new ArrayList<HttpClientPair_V1>());
     }
 
-    private VerticalLayout buildParamsLayout(final String keyName, final Map<String, String> paramMap) {
+    private VerticalLayout buildParamsLayout(final String keyName, final List<HttpClientPair_V1> paramMap) {
 
         // Building headers for a table
         final VerticalLayout mainLayout = new VerticalLayout();
@@ -118,10 +117,10 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
                             Notification.show("Empty field!");
                             return;
                         }
-                        if (!addParam(keyTextValue, valueTextValue, paramMap)) {
-                            Notification.show("Duplicate " + keyName + "!");
-                            return;
-                        }
+//                        if (!addParam(keyTextValue, valueTextValue, paramMap)) {
+//                            Notification.show("Duplicate " + keyName + "!");
+//                            return;
+//                        }
                         Label key = new Label(keyTextValue);
                         Label value = new Label(valueTextValue);
                         key.setWidth(300, Unit.PIXELS);

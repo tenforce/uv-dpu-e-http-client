@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * Main data processing unit class.
@@ -57,10 +56,10 @@ public class httpClient extends AbstractDpu<httpClientConfig_V1> {
     @ExtensionInitializer.Init
     public RdfConfiguration _rdfConfiguration;
 
-	public httpClient() {
-		super(httpClientVaadinDialog.class, ConfigHistory.noHistory(httpClientConfig_V1.class));
-	}
-		
+    public httpClient() {
+        super(httpClientVaadinDialog.class, ConfigHistory.noHistory(httpClientConfig_V1.class));
+    }
+
     @Override
     protected void innerExecute() throws DPUException {
 
@@ -69,39 +68,39 @@ public class httpClient extends AbstractDpu<httpClientConfig_V1> {
         NameValuePair[] parameters = new NameValuePair[config.getParams().size()];
 
         int i = 0;
-        for (Map.Entry<String, String> entry : config.getParams().entrySet()) {
-            parameters[i] = new BasicNameValuePair(entry.getKey(), entry.getValue());
+        for (HttpClientPair_V1 entry : config.getParams()) {
+            parameters[i] = new BasicNameValuePair(entry.getName(), entry.getValue());
             i++;
         }
 
         LOG.info("\nMethod: " + config.getMethod() + "\nURI: " + config.getUri() + "\nBody: " + config.getBody() + "\n");
 
 
-            RequestBuilder requestBuilder;
-            if (config.getMethod().equalsIgnoreCase("get")) {
-                requestBuilder = RequestBuilder.get();
-            } else if (config.getMethod().equalsIgnoreCase("post")) {
-                StringEntity stringEntity;
-                try {
-                    stringEntity = new StringEntity(config.getBody());
-                } catch (UnsupportedEncodingException ex) {
-                    throw ContextUtils.dpuException(ctx, ex, "FilesDownload.execute.exception");
-                }
-                requestBuilder = RequestBuilder.post()
-                        .setEntity(stringEntity);
-
-            } else {
-                throw new IllegalArgumentException("Unsupported method");
+        RequestBuilder requestBuilder;
+        if (config.getMethod().equalsIgnoreCase("get")) {
+            requestBuilder = RequestBuilder.get();
+        } else if (config.getMethod().equalsIgnoreCase("post")) {
+            StringEntity stringEntity;
+            try {
+                stringEntity = new StringEntity(config.getBody());
+            } catch (UnsupportedEncodingException ex) {
+                throw ContextUtils.dpuException(ctx, ex, "FilesDownload.execute.exception");
             }
+            requestBuilder = RequestBuilder.post()
+                    .setEntity(stringEntity);
 
-            for (Map.Entry<String, String> entry : config.getHeaders().entrySet()) {
-                requestBuilder.addHeader(entry.getKey(), entry.getValue());
-            }
+        } else {
+            throw new IllegalArgumentException("Unsupported method");
+        }
 
-            HttpUriRequest request = requestBuilder
-                    .setUri(config.getUri())
-                    .addParameters(parameters)
-                    .build();
+        for (HttpClientPair_V1 entry : config.getHeaders()) {
+            requestBuilder.addHeader(entry.getName(), entry.getValue());
+        }
+
+        HttpUriRequest request = requestBuilder
+                .setUri(config.getUri())
+                .addParameters(parameters)
+                .build();
 
         CloseableHttpResponse response = null;
         try {
@@ -139,7 +138,7 @@ public class httpClient extends AbstractDpu<httpClientConfig_V1> {
         } catch (IOException ex) {
             throw ContextUtils.dpuException(ctx, ex, "FilesDownload.execute.exception");
         }
-        
+
     }
 
 }
