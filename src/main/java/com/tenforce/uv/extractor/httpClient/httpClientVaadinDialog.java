@@ -64,7 +64,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         methodMenu.addItem("POST");
         methodMenu.setValue("GET");
         final TextArea bodyTextArea = new TextArea("Body:");
-        bodyTextArea.setWidth(300, Unit.PIXELS);
+        bodyTextArea.setWidth(600, Unit.PIXELS);
 
         upperLayout.addComponent(uriLabel);
         upperLayout.addComponent(uriField);
@@ -88,16 +88,16 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
 
         // Building headers for a table
         final VerticalLayout mainLayout = new VerticalLayout();
-        final TextField headerHeader = new TextField(keyName + ":");
-        headerHeader.setReadOnly(true);
-        final TextField valueHeader = new TextField("value:");
-        valueHeader.setReadOnly(true);
-        mainLayout.addComponent(new HorizontalLayout() {
-            {
-                addComponent(headerHeader);
-                addComponent(valueHeader);
-            }
-        });
+//        final Label headerHeader = new Label(keyName + ":");
+//        final Label valueHeader = new Label("value:");
+//        headerHeader.setWidth(300, Unit.PIXELS);
+//        valueHeader.setWidth(300, Unit.PIXELS);
+//        mainLayout.addComponent(new HorizontalLayout() {
+//            {
+//                addComponent(headerHeader);
+//                addComponent(valueHeader);
+//            }
+//        });
 
         final TextField keyText = new TextField();
         final TextField valueText = new TextField();
@@ -122,16 +122,16 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
                             Notification.show("Duplicate " + keyName + "!");
                             return;
                         }
-                        TextField key = new TextField(keyTextValue);
-                        TextField value = new TextField(valueTextValue);
+                        Label key = new Label(keyTextValue);
+                        Label value = new Label(valueTextValue);
                         key.setWidth(300, Unit.PIXELS);
                         value.setWidth(300, Unit.PIXELS);
-                        key.setReadOnly(true);
-                        value.setReadOnly(true);
+                        keyText.setValue("");
+                        valueText.setValue("");
 
                         values.addComponent(key);
                         values.addComponent(value);
-                        Button removeButton = new Button("X");
+                        Button removeButton = new Button("Remove " + keyName);
                         removeButton.addClickListener(new Button.ClickListener() {
                             @Override
                             public void buttonClick(Button.ClickEvent clickEvent) {
