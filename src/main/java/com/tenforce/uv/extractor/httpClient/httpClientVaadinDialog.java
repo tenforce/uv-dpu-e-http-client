@@ -21,7 +21,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     private TextArea bodyTextArea;
     private List<HttpClientPair_V1> headersList = new ArrayList<>();
     private List<HttpClientPair_V1> paramsList = new ArrayList<>();
-
+    private VerticalLayout headersLayout = new VerticalLayout();
+    private VerticalLayout paramsLayout = new VerticalLayout();
 
     public httpClientVaadinDialog() {
         super(httpClient.class);
@@ -32,8 +33,19 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         uriField.setValue(configuration.getUri());
         methodMenu.setValue(configuration.getMethod());
         bodyTextArea.setValue(configuration.getBody());
-        headersList = configuration.getHeaders();
-        paramsList = configuration.getParams();
+
+        headersLayout.removeAllComponents();
+        paramsLayout.removeAllComponents();
+
+        headersList.clear();
+        paramsList.clear();
+
+        for (HttpClientPair_V1 pair : configuration.getHeaders()) {
+            generateRow(pair.getName(), pair.getValue(), "header", headersLayout, headersList);
+        }
+        for (HttpClientPair_V1 pair : configuration.getParams()) {
+            generateRow(pair.getName(), pair.getValue(), "param", paramsLayout, paramsList);
+        }
     }
 
     @Override
@@ -81,60 +93,29 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         upperLayout.addComponent(bodyTextArea);
 
         mainLayout.addComponent(upperLayout);
-        mainLayout.addComponent(buildParamsLayout("header", headersList));
-        mainLayout.addComponent(buildParamsLayout("param", paramsList));
+        mainLayout.addComponent(buildParamsLayout("header", headersList, headersLayout));
+        mainLayout.addComponent(buildParamsLayout("param", paramsList, paramsLayout));
+
         setCompositionRoot(mainLayout);
     }
 
-    private VerticalLayout buildParamsLayout(final String keyName, final List<HttpClientPair_V1> params) {
+    private VerticalLayout buildParamsLayout(final String keyName, final List<HttpClientPair_V1> params, final VerticalLayout layout) {
 
-        // Building headers for a table
-        final VerticalLayout mainLayout = new VerticalLayout();
         final TextField keyText = new TextField();
         final TextField valueText = new TextField();
         keyText.setWidth(300, Unit.PIXELS);
         valueText.setWidth(300, Unit.PIXELS);
-        // Add button setup
+
         Button addButton = new Button("Add " + keyName);
         addButton.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent clickEvent) {
-                {
-                    {
-                        final HorizontalLayout values = new HorizontalLayout();
-                        final String keyTextValue = keyText.getValue();
-                        String valueTextValue = valueText.getValue();
-                        if (keyTextValue == null || valueTextValue == null
-                                || keyTextValue.isEmpty() || valueTextValue.isEmpty()) {
-                            Notification.show("Empty field!");
-                            return;
-                        }
-                        if (!addParam(keyTextValue, valueTextValue, params)) {
-                            Notification.show("Duplicate or null" + keyName + "!");
-                            return;
-                        }
-                        Label key = new Label(keyTextValue);
-                        Label value = new Label(valueTextValue);
-                        key.setWidth(300, Unit.PIXELS);
-                        value.setWidth(300, Unit.PIXELS);
-                        keyText.setValue("");
-                        valueText.setValue("");
-
-                        values.addComponent(key);
-                        values.addComponent(value);
-                        Button removeButton = new Button("Remove " + keyName);
-                        removeButton.addClickListener(new Button.ClickListener() {
-                            @Override
-                            public void buttonClick(Button.ClickEvent clickEvent) {
-                                mainLayout.removeComponent(values);
-                                params.remove(keyTextValue);
-                            }
-                        });
-                        values.addComponent(removeButton);
-
-                        mainLayout.addComponent(values);
-                    }
+                if (!validateParams(keyText.getValue(), valueText.getValue(), params)) {
+                    return;
                 }
+                generateRow(keyText.getValue(), valueText.getValue(), keyName, layout, params);
+                keyText.setValue("");
+                valueText.setValue("");
             }
         });
         HorizontalLayout addLayout = new HorizontalLayout();
@@ -143,26 +124,48 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         addLayout.addComponent(valueText);
         addLayout.addComponent(addButton);
         VerticalLayout paramsLayout = new VerticalLayout();
-        paramsLayout.addComponent(mainLayout);
+        paramsLayout.addComponent(layout);
         paramsLayout.addComponent(addLayout);
 
         return paramsLayout;
     }
 
-    private boolean addParam(String header, String value, List<HttpClientPair_V1> params) {
+    private boolean validateParams(String key, String value, List<HttpClientPair_V1> params) {
+        if (key == null || value == null
+                || key.trim().isEmpty() || value.trim().isEmpty()) {
+            Notification.show("Empty field!");
+            return false;
+        }
         for (HttpClientPair_V1 pair : params) {
-            if (pair.getName().equals(header)) {
+            if (pair.getName().equals(key)) {
+                Notification.show("Duplicate value!");
                 return false;
             }
         }
+        return true;
+    }
 
-        if (header == null || header.isEmpty()) {
-            return false;
-        }
-        HttpClientPair_V1 pair = new HttpClientPair_V1();
-        pair.setName(header);
-        pair.setValue(value);
-        params.add(pair);
-            return true;
+    private void generateRow(final String keyText, final String valueText, String keyName, final VerticalLayout layout, final List<HttpClientPair_V1> params) {
+        final HorizontalLayout values = new HorizontalLayout();
+
+        Label key = new Label(keyText);
+        Label value = new Label(valueText);
+        key.setWidth(300, Unit.PIXELS);
+        value.setWidth(300, Unit.PIXELS);
+
+        values.addComponent(key);
+        values.addComponent(value);
+        Button removeButton = new Button("Remove " + keyName);
+        params.add(new HttpClientPair_V1(keyText, valueText));
+        removeButton.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent clickEvent) {
+                layout.removeComponent(values);
+                params.remove(new HttpClientPair_V1(keyText, valueText));
+            }
+        });
+
+        values.addComponent(removeButton);
+        layout.addComponent(values);
     }
 }
