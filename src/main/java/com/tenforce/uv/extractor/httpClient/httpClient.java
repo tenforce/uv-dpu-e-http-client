@@ -41,104 +41,98 @@ import java.util.Date;
 @DPU.AsExtractor
 public class httpClient extends AbstractDpu<httpClientConfig_V1> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(httpClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(httpClient.class);
 
-    @RdfConfiguration.ContainsConfiguration
-    @DataUnit.AsInput(name = "config", optional = true)
-    public RDFDataUnit rdfConfiguration;
+  @RdfConfiguration.ContainsConfiguration
+  @DataUnit.AsInput(name = "config", optional = true)
+  public RDFDataUnit rdfConfiguration;
 
-    @DataUnit.AsOutput(name = "output")
-    public WritableFilesDataUnit filesOutput;
+  @DataUnit.AsOutput(name = "output")
+  public WritableFilesDataUnit filesOutput;
 
-    @ExtensionInitializer.Init
-    public FaultTolerance faultTolerance;
+  @ExtensionInitializer.Init
+  public FaultTolerance faultTolerance;
 
-    @ExtensionInitializer.Init
-    public RdfConfiguration _rdfConfiguration;
+  @ExtensionInitializer.Init
+  public RdfConfiguration _rdfConfiguration;
 
-    public httpClient() {
-        super(httpClientVaadinDialog.class, ConfigHistory.noHistory(httpClientConfig_V1.class));
+  public httpClient() {
+    super(httpClientVaadinDialog.class, ConfigHistory.noHistory(httpClientConfig_V1.class));
+  }
+
+  @Override
+  protected void innerExecute() throws DPUException {
+    ContextUtils.sendShortInfo(ctx, "httpClient.message");
+    CloseableHttpClient client = HttpClients.createDefault();
+    NameValuePair[] parameters = new NameValuePair[config.getParams().size()];
+
+    int i = 0;
+    for (HttpClientPair_V1 entry : config.getParams()) {
+      parameters[i] = new BasicNameValuePair(entry.getName(), entry.getValue());
+      i++;
     }
 
-    @Override
-    protected void innerExecute() throws DPUException {
-
-        ContextUtils.sendShortInfo(ctx, "httpClient.message");
-        CloseableHttpClient client = HttpClients.createDefault();
-        NameValuePair[] parameters = new NameValuePair[config.getParams().size()];
-
-        int i = 0;
-        for (HttpClientPair_V1 entry : config.getParams()) {
-            parameters[i] = new BasicNameValuePair(entry.getName(), entry.getValue());
-            i++;
-        }
-
-        LOG.info("\nMethod: " + config.getMethod() + "\nURI: " + config.getUri() + "\nBody: " + config.getBody() + "\n");
-
-
-        RequestBuilder requestBuilder;
-        if (config.getMethod().equalsIgnoreCase("get")) {
-            requestBuilder = RequestBuilder.get();
-        } else if (config.getMethod().equalsIgnoreCase("post")) {
-            StringEntity stringEntity;
-            try {
-                stringEntity = new StringEntity(config.getBody());
-            } catch (UnsupportedEncodingException ex) {
-                throw ContextUtils.dpuException(ctx, ex, "FilesDownload.execute.exception");
-            }
-            requestBuilder = RequestBuilder.post()
-                    .setEntity(stringEntity);
-
-        } else {
-            throw new IllegalArgumentException("Unsupported method");
-        }
-
-        for (HttpClientPair_V1 entry : config.getHeaders()) {
-            requestBuilder.addHeader(entry.getName(), entry.getValue());
-        }
-
-        HttpUriRequest request = requestBuilder
-                .setUri(config.getUri())
-                .addParameters(parameters)
-                .build();
-
-        CloseableHttpResponse response = null;
-        try {
-            response = client.execute(request);
-        } catch (IOException ex) {
-            throw ContextUtils.dpuException(ctx, ex, "FilesDownload.execute.exception");
-        }
-
-        HttpEntity entity = response.getEntity();
-
-        final String fileName = "downloaded.file";
-        final FilesDataUnit.Entry destinationFile = faultTolerance.execute(new FaultTolerance.ActionReturn<FilesDataUnit.Entry>() {
-
-            @Override
-            public FilesDataUnit.Entry action() throws Exception {
-                return FilesDataUnitUtils.createFile(filesOutput, fileName);
-            }
-        });
-        // Add some metadata, TODO: Improve this code!
-        faultTolerance.execute(new FaultTolerance.Action() {
-
-            @Override
-            public void action() throws Exception {
-                final Resource resource = ResourceHelpers.getResource(filesOutput, fileName);
-                final Date now = new Date();
-                resource.setCreated(now);
-                resource.setLast_modified(now);
-                ResourceHelpers.setResource(filesOutput, fileName, resource);
-            }
-        }, "FilesDownload.execute.exception");
-        // Copy file.
-        try {
-            FileUtils.copyInputStreamToFile(entity.getContent(),
-                    FaultToleranceUtils.asFile(faultTolerance, destinationFile));
-        } catch (IOException ex) {
-            throw ContextUtils.dpuException(ctx, ex, "FilesDownload.execute.exception");
-        }
-
+    LOG.info("\nMethod: " + config.getMethod() + "\nURI: " + config.getUri() + "\nBody: " + config.getBody() + "\n");
+    HttpEntity responseBody;
+    try {
+      HttpUriRequest request = buildRequest(parameters);
+      CloseableHttpResponse response = client.execute(request);
+      validateResponse(response);
+      responseBody = response.getEntity();
+    } catch (Exception e) {
+      throw ContextUtils.dpuException(ctx, e, "httpClient.execute.exception");
     }
+
+
+    final String fileName = "downloaded.file";
+    final FilesDataUnit.Entry destinationFile = faultTolerance.execute(new FaultTolerance.ActionReturn<FilesDataUnit.Entry>() {
+
+      @Override
+      public FilesDataUnit.Entry action() throws Exception {
+        return FilesDataUnitUtils.createFile(filesOutput, fileName);
+      }
+    });
+    // Add some metadata, TODO: Improve this code!
+    faultTolerance.execute(new FaultTolerance.Action() {
+
+      @Override
+      public void action() throws Exception {
+        final Resource resource = ResourceHelpers.getResource(filesOutput, fileName);
+        final Date now = new Date();
+        resource.setCreated(now);
+        resource.setLast_modified(now);
+        ResourceHelpers.setResource(filesOutput, fileName, resource);
+      }
+    }, "httpClient.execute.exception");
+    // Copy file.
+    try {
+      FileUtils.copyInputStreamToFile(responseBody.getContent(),
+          FaultToleranceUtils.asFile(faultTolerance, destinationFile));
+    } catch (IOException ex) {
+      throw ContextUtils.dpuException(ctx, ex, "httpClient.execute.exception");
+    }
+
+  }
+
+  private HttpUriRequest buildRequest(NameValuePair[] parameters) throws UnsupportedEncodingException {
+    RequestBuilder requestBuilder = RequestBuilder.create(config.getMethod());
+    requestBuilder.setUri(config.getUri());
+    if (config.getBody() != null)
+      requestBuilder.setEntity(new StringEntity(config.getBody()));
+    for (HttpClientPair_V1 entry : config.getHeaders()) {
+      requestBuilder.addHeader(entry.getName(), entry.getValue());
+    }
+    return requestBuilder
+        .setUri(config.getUri())
+        .addParameters(parameters)
+        .build();
+
+  }
+
+  private void validateResponse(CloseableHttpResponse response) {
+    int code = response.getStatusLine().getStatusCode();
+    if (code < 200 || code > 206)
+      throw new RuntimeException("server returned non 2xx status code:" + code);
+  }
 
 }

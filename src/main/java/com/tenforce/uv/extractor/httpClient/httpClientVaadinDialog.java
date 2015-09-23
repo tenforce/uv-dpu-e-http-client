@@ -82,6 +82,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         methodMenu.setNullSelectionAllowed(false);
         methodMenu.addItem("GET");
         methodMenu.addItem("POST");
+        methodMenu.addItem("PUT");
+        methodMenu.addItem("DELETE");
         methodMenu.setValue("GET");
         bodyTextArea = new TextArea("Body:");
         bodyTextArea.setWidth(600, Unit.PIXELS);
@@ -90,12 +92,12 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         upperLayout.addComponent(uriField);
         upperLayout.addComponent(methodLabel);
         upperLayout.addComponent(methodMenu);
-        upperLayout.addComponent(bodyTextArea);
-
+        TabSheet tabsheet = new TabSheet();
+        upperLayout.addComponent(tabsheet);
+        tabsheet.addTab(buildParamsLayout("header", headersList, headersLayout), "Headers");
+        tabsheet.addTab(buildParamsLayout("param", paramsList, paramsLayout), "Parameters");
+        tabsheet.addTab(bodyTextArea, "Body");
         mainLayout.addComponent(upperLayout);
-        mainLayout.addComponent(buildParamsLayout("header", headersList, headersLayout));
-        mainLayout.addComponent(buildParamsLayout("param", paramsList, paramsLayout));
-
         setCompositionRoot(mainLayout);
     }
 
@@ -155,7 +157,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
 
         values.addComponent(key);
         values.addComponent(value);
-        Button removeButton = new Button("Remove " + keyName);
+        Button removeButton = new Button("X");
         params.add(new HttpClientPair_V1(keyText, valueText));
         removeButton.addClickListener(new Button.ClickListener() {
             @Override
