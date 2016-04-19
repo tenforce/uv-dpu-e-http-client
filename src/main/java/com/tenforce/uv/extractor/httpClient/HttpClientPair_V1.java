@@ -2,8 +2,10 @@ package com.tenforce.uv.extractor.httpClient;
 
 import eu.unifiedviews.helpers.dpu.ontology.EntityDescription;
 
+import java.io.Serializable;
+
 @EntityDescription.Entity(type = HttpClientVocabulary.STR_PAIR_CLASS)
-public class HttpClientPair_V1 {
+public class HttpClientPair_V1 implements Serializable {
     @EntityDescription.Property(uri = HttpClientVocabulary.STR_PAIR_KEY)
     private String name;
     @EntityDescription.Property(uri = HttpClientVocabulary.STR_PAIR_VALUE)
