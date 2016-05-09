@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.tenforce.uv</groupId>
     <artifactId>e-httpClient</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <packaging>bundle</packaging>
     <name>httpClient</name>
     <description></description>
