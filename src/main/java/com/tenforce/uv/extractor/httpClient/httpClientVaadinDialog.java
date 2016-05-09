@@ -81,7 +81,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
   private void buildOauthLayout() {
     oauthLayout.setCaption("Oauth");
     secret.setWidth("300px");
-    key.setCaption("300px");
+    key.setWidth("300px");
     oauthLayout.addComponent(secret);
     oauthLayout.addComponent(key);
   }
