@@ -21,4 +21,6 @@ public class HttpClientVocabulary {
 
     public static final String STR_PAIR_VALUE = PREFIX_PAIR + "value";
 
+    public static final String STR_CONFIG_OAUTH_KEY = PREFIX + "hasOauthKey";
+    public static final String STR_CONFIG_OAUTH_SECRET = PREFIX + "hasOauthSecret";
 }

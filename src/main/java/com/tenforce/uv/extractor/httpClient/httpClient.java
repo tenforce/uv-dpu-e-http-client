@@ -16,6 +16,8 @@ import eu.unifiedviews.helpers.dpu.extension.ExtensionInitializer;
 import eu.unifiedviews.helpers.dpu.extension.faulttolerance.FaultTolerance;
 import eu.unifiedviews.helpers.dpu.extension.faulttolerance.FaultToleranceUtils;
 import eu.unifiedviews.helpers.dpu.extension.rdf.RdfConfiguration;
+import oauth.signpost.OAuthConsumer;
+import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -76,6 +78,8 @@ public class httpClient extends AbstractDpu<httpClientConfig_V1> {
     HttpEntity responseBody;
     try {
       HttpUriRequest request = buildRequest(parameters);
+      if (! config.getOauthConsumerKey().isEmpty() && !config.getOauthConsumerSecret().isEmpty())
+        signRequestWithOauth(request);
       CloseableHttpResponse response = client.execute(request);
       validateResponse(response);
       responseBody = response.getEntity();
@@ -112,6 +116,15 @@ public class httpClient extends AbstractDpu<httpClientConfig_V1> {
       throw ContextUtils.dpuException(ctx, ex, "httpClient.execute.exception");
     }
 
+  }
+
+  private void signRequestWithOauth(HttpUriRequest request) throws DPUException {
+    OAuthConsumer consumer = new CommonsHttpOAuthConsumer(config.getOauthConsumerKey(), config.getOauthConsumerSecret());
+    try {
+      consumer.sign(request);
+    } catch (Exception e) {
+      throw ContextUtils.dpuException(ctx, e, "httpClient.execute.exception");
+    }
   }
 
   private HttpUriRequest buildRequest(NameValuePair[] parameters) throws UnsupportedEncodingException {
