@@ -28,6 +28,12 @@ public class httpClientConfig_V1 {
     @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_HAS_BODY)
     private String body;
 
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_OAUTH_SECRET)
+    private String oauthConsumerSecret = "";
+
+    @EntityDescription.Property(uri = HttpClientVocabulary.STR_CONFIG_OAUTH_KEY)
+    private String oauthConsumerKey = "";
+
     public List<HttpClientPair_V1> getHeaders() {
         return headers;
     }
@@ -68,4 +74,19 @@ public class httpClientConfig_V1 {
         this.body = body;
     }
 
+    public String getOauthConsumerSecret() {
+        return oauthConsumerSecret;
+    }
+
+    public void setOauthConsumerSecret(String oauthConsumerSecret) {
+        this.oauthConsumerSecret = oauthConsumerSecret;
+    }
+
+    public String getOauthConsumerKey() {
+        return oauthConsumerKey;
+    }
+
+    public void setOauthConsumerKey(String oauthConsumerKey) {
+        this.oauthConsumerKey = oauthConsumerKey;
+    }
 }
