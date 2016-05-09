@@ -17,10 +17,7 @@ import eu.unifiedviews.helpers.dpu.extension.faulttolerance.FaultTolerance;
 import eu.unifiedviews.helpers.dpu.extension.faulttolerance.FaultToleranceUtils;
 import eu.unifiedviews.helpers.dpu.extension.rdf.RdfConfiguration;
 import oauth.signpost.OAuthConsumer;
-import oauth.signpost.basic.DefaultOAuthConsumer;
-import oauth.signpost.exception.OAuthCommunicationException;
-import oauth.signpost.exception.OAuthExpectationFailedException;
-import oauth.signpost.exception.OAuthMessageSignerException;
+import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -122,7 +119,7 @@ public class httpClient extends AbstractDpu<httpClientConfig_V1> {
   }
 
   private void signRequestWithOauth(HttpUriRequest request) throws DPUException {
-    OAuthConsumer consumer = new DefaultOAuthConsumer(config.getOauthConsumerKey(), config.getOauthConsumerSecret());
+    OAuthConsumer consumer = new CommonsHttpOAuthConsumer(config.getOauthConsumerKey(), config.getOauthConsumerSecret());
     try {
       consumer.sign(request);
     } catch (Exception e) {
