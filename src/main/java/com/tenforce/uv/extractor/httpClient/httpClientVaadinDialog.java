@@ -18,12 +18,17 @@ import java.util.UUID;
 public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> {
   private final VerticalLayout mainLayout = new VerticalLayout();
   private boolean showHeaders = false;
+  private boolean showAuth = false;
   private VerticalLayout headersLayout = new VerticalLayout();
+  private HorizontalLayout oauthLayout = new HorizontalLayout();
   private TextField uriField;
   private ComboBox methodMenu;
   private Table headersTable = new Table();
   private TextArea bodyTextArea;
-  BeanContainer<String, HttpClientPair_V1> headersContainer = new BeanContainer<>(HttpClientPair_V1.class);
+  private TextField secret = new TextField("Secret");
+  private TextField key = new TextField("key");
+  private Button headersToggle = new Button("HEADERS");
+  private BeanContainer<String, HttpClientPair_V1> headersContainer = new BeanContainer<>(HttpClientPair_V1.class);
 
   public httpClientVaadinDialog() {
     super(httpClient.class);
@@ -37,6 +42,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     methodMenu.setValue(configuration.getMethod());
     bodyTextArea.setValue(configuration.getBody());
     headersContainer.addAll(configuration.getHeaders());
+    key.setValue(configuration.getOauthConsumerKey());
+    secret.setValue(configuration.getOauthConsumerSecret());
   }
 
   @Override
@@ -46,6 +53,8 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     configuration.setBody(bodyTextArea.getValue());
     configuration.setMethod((String) methodMenu.getValue());
     configuration.setHeaders(pairsInContainer(headersContainer));
+    configuration.setOauthConsumerKey(key.getValue());
+    configuration.setOauthConsumerSecret(secret.getValue());
     return configuration;
   }
 
@@ -57,8 +66,11 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     mainLayout.setMargin(true);
     mainLayout.addComponent(new Label(ctx.tr("httpClient.dialog.label")));
     mainLayout.addComponent(buildTopBar());
+    mainLayout.addComponent(buildOptionsBar());
     buildHeadersTable();
+    buildOauthLayout();
     mainLayout.addComponent(headersLayout);
+    mainLayout.addComponent(oauthLayout);
     bodyTextArea = new TextArea("Body:");
     bodyTextArea.setWidth("800px");
     bodyTextArea.setHeight("300px");
@@ -66,9 +78,17 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     setCompositionRoot(mainLayout);
   }
 
+  private void buildOauthLayout() {
+    oauthLayout.setCaption("Oauth");
+    secret.setWidth("300px");
+    key.setCaption("300px");
+    oauthLayout.addComponent(secret);
+    oauthLayout.addComponent(key);
+  }
+
   private void buildHeadersTable() {
     headersTable.setCaption("Headers");
-    headersTable.addGeneratedColumn("", new RemoveButtonGenerator());
+    headersTable.addGeneratedColumn("", new RemoveButtonGenerator(headersToggle));
     headersTable.setContainerDataSource(headersContainer);
     headersTable.setWidth("800px");
     headersTable.setHeight("150px");
@@ -78,6 +98,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     addRow.addClickListener(new Button.ClickListener() {
       public void buttonClick(Button.ClickEvent event) {
         headersContainer.addItem(UUID.randomUUID().toString(),new HttpClientPair_V1());
+        headersToggle.setCaption("HEADERS (" + headersContainer.size()+ ")");
       }
     });
     headersLayout.setVisible(showHeaders);
@@ -89,7 +110,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     uriField.addValidator(new StringLengthValidator(
         "URI Field cannot be empty!",
         null, null, true));
-    uriField.setWidth(500, Unit.PIXELS);
+    uriField.setWidth(650, Unit.PIXELS);
 
     methodMenu = new ComboBox();
     methodMenu.setTextInputAllowed(false);
@@ -102,7 +123,13 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     methodMenu.setValue("GET");
     methodMenu.setWidth("150px");
 
-    Button headersToggle = new Button("HEADERS");
+    HorizontalLayout topBar = new HorizontalLayout();
+    topBar.addComponent(methodMenu);
+    topBar.addComponent(uriField);
+    return topBar;
+  }
+
+  private Component buildOptionsBar() {
     headersToggle.setWidth("150px");
     headersToggle.addClickListener(new Button.ClickListener() {
       public void buttonClick(Button.ClickEvent event) {
@@ -110,18 +137,27 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
         headersLayout.setVisible(showHeaders);
       }
     });
+    if (headersContainer.size() > 0)
+      headersToggle.setCaption("HEADERS (" + headersContainer.size() + ")");
 
-    HorizontalLayout topBar = new HorizontalLayout();
-    topBar.addComponent(methodMenu);
-    topBar.addComponent(uriField);
-    topBar.addComponent(headersToggle);
-    return topBar;
+    Button oauthConsumerToggle = new Button("OAuth");
+    oauthConsumerToggle.addClickListener(new Button.ClickListener() {
+      public void buttonClick(Button.ClickEvent event) {
+        showAuth = !showAuth;
+        oauthLayout.setVisible(showAuth);
+      }
+    });
+    HorizontalLayout optionsBar = new HorizontalLayout();
+    optionsBar.addComponent(headersToggle);
+    optionsBar.addComponent(oauthConsumerToggle);
+    return optionsBar;
   }
 
   private ArrayList<HttpClientPair_V1> pairsInContainer(BeanContainer<String, HttpClientPair_V1> container) {
     ArrayList<HttpClientPair_V1> list = new ArrayList<>(container.size());
     for (Object itemId : container.getItemIds())
-      list.add(container.getItem(itemId).getBean());
+      if (!container.getItem(itemId).getBean().getName().isEmpty())
+        list.add(container.getItem(itemId).getBean());
     return list;
   }
 }
