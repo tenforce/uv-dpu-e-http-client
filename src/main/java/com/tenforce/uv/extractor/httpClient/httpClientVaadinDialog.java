@@ -1,6 +1,5 @@
 package com.tenforce.uv.extractor.httpClient;
 
-import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.ui.*;
@@ -8,6 +7,7 @@ import eu.unifiedviews.dpu.config.DPUConfigException;
 import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 
 /**
@@ -77,7 +77,7 @@ public class httpClientVaadinDialog extends AbstractDialog<httpClientConfig_V1> 
     Button addRow = new Button("Add header");
     addRow.addClickListener(new Button.ClickListener() {
       public void buttonClick(Button.ClickEvent event) {
-        headersContainer.addBean(new HttpClientPair_V1("",""));
+        headersContainer.addItem(UUID.randomUUID().toString(),new HttpClientPair_V1());
       }
     });
     headersLayout.setVisible(showHeaders);
